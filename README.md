@@ -23,3 +23,5 @@ python manage.py makemigrations
 ```python 
 python manage.py migrate
 ```
+________
+**Wissam Al-Kahwaji**
