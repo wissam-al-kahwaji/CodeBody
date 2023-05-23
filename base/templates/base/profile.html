@@ -1,0 +1,367 @@
+{% extends 'main.html' %}
+{% load custom_filters %}
+{% load static %}
+
+{% block title %} Profile {{ user.username }} {% endblock title %}
+
+{% block content %}
+
+  <div class="profile-container">
+    <div class="profile-left margin-left">
+      <div class="profile border-hr">
+        <div class="top-profile">
+              <img src="{{ user.avatar.url }}">          
+          <div class="profile-name">
+            <h4>{{user.name}}</h4>
+            <span> {{user.username}}</span>
+          </div>
+      </div>
+
+      <div class="flex Follow-container" id="Follow-container">
+        <div class="Followers ">
+          <h4>Followers</h4>
+          <p class="effect_text_top animation-1s">{{followers.count|shorten_number }}</p>
+        </div>
+        <div class="Follow">
+          <h4>Follow</h4>
+          <p class="effect_text_top animation-1s">{{follow.count|shorten_number}}</p>
+        </div>
+        </div>
+
+        <div class="button-profile">
+          {% if request.user.is_authenticated %}
+          {%if request.user == user %}
+          <a href="/Settings/Profile">
+            <div class="EditProfile">
+              {% include 'icon/user-gear.svg' %}
+              Edit Profile
+            </div>
+          </a>
+          {% else %}
+
+          <div>
+            <form id="Follow_UnFollow" action="" method="post">
+              {% csrf_token %}
+            {% if is_Follow == True %}
+              <div class="flex">
+                <input type="text" style="display: none;" name="target" value="{{user.username}}">
+                <input type="text" style="display: none;" name="status" value="UnFollow">
+                <button class="button-UnFollow flex" type="submit">
+                  {% include 'icon/unfollow.svg' %}
+                  unFollow
+                </button>
+              </div>
+              {% else %}
+              <div class="flex">
+                <input type="text" style="display: none;" name="target" value="{{user.username}}">
+                <input type="text" style="display: none;" name="status" value="Follow">
+                <button class="button-Follow" type="submit">
+                  {% include 'icon/following.svg' %}
+                  Follow
+                </button>
+              </div>
+              {% endif %}
+            </form>
+                </div>
+        {% endif %}
+        {% endif %}
+
+      </div>
+      
+    </div>
+    <div class="profile-Data border-hr">
+      {% if user.bio != None %}
+        <div class="bio">
+          {{ user.bio }}
+        </div>
+        {% endif %}
+        <div class="Data margin-top">
+          {% if user.Job != None %}
+          <p>
+            {% include 'icon/job.svg' %}
+            {{ user.Job }}
+          </p>
+          {% endif %}
+          {% if user.Use_code != None %}
+          <p>
+            {% include 'icon/Code.svg' %}
+            {{user.Use_code}}
+          </p> 
+          {% endif %}
+          {% if user.location != None %}
+          <p>
+            {% include 'icon/Location.svg' %}
+            {{ user.location }}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  <div class="rank border-hr phone">
+    <img src="{{rank.Logo_rank.url}}">
+    <div id="data-rank">
+      
+      <button data-bs-toggle="collapse" data-bs-target="#Rank-number2">{{ rank.respect|shorten_number }}</button>
+
+      <div id="Rank-number2" class="collapse">
+        <p>{{rank.respect}}</p>
+      </div> 
+    </div>
+  </div>
+
+  <div class="cenert-container">
+    <form method="get">
+      <div class="title-profile">
+        <div class="button-profile" id="Portfolio">
+          <button>{% include 'icon/document.svg' %} Portfolio</div>
+          </button>
+          <div class="button-profile" id="Discussions">
+            <button value="Discussions" name="tab">
+              {% include 'icon/users-alt.svg' %} Discussions
+            </div>
+          </button>
+          <div class="button-profile" id="Projects">
+            <button value="Projects" name="tab">
+              {% include 'icon/project.svg' %} Projects
+            </button>
+          </div>
+      </div>
+      </form>
+      {% if tab == "Discussions" or page != None %}
+      {% if discussion_count == 0 %}
+      <div class="profile-center-Feed" id="feed_discussion">
+        <div class="NoFeedDiscussions border-hr">
+          There are No Discussions
+        </div>
+      </div>
+      {% else %}
+      <div class="profile-center-Feed" id="feed_discussion">
+        {% include 'base/feed_discussion.html' %}
+      </div>
+      {% endif %}
+      {% elif tab == "Projects" %}
+
+      {% if GitHubLike == False %}
+
+      <div class="NOGithub border-hr">
+        GitHub account not added
+      </div>
+      {% else %}
+      <div id="Projects_GitHub">
+      </div>
+
+
+      
+      
+      
+  <script>
+    
+    function shorten_number(number) {
+    var suffixes = ['', 'K', 'M', 'B'];
+    var suffix_index = 0;
+
+    while (number >= 1000 && suffix_index < suffixes.length - 1) {
+        suffix_index++;
+        number /= 1000;
+    }
+
+    var result = suffixes[suffix_index] == '' ? number.toFixed(0) : number.toFixed(1);
+    result += suffixes[suffix_index];
+    
+    return result;
+}
+
+
+
+    let ProjectsGitHub = document.getElementById('Projects_GitHub');
+    var HTML = '';
+    
+    $.ajax({
+    url:"{{GitHubLike}}",
+    type:"GET",
+    success: function(date){
+      date.sort(function(a, b) {
+      var timeA = new Date(a.created_at);
+      var timeB = new Date(b.created_at);
+      return timeB - timeA;
+    });
+
+      for(gitdate of date){
+        created_at = TimeNow(gitdate.created_at);
+        stargazers_count = shorten_number(gitdate.stargazers_count);
+        language_url = "https://github.com/search?q=" + encodeURIComponent(gitdate.language) + "&type=repositories";
+        
+        if (gitdate.language == null){
+          gitdate.language = 'The language is not specified';
+          language_url = "https://github.com/search";
+        }
+        if (gitdate.description == null){
+          gitdate.description = 'There is no description';
+        }
+        HTML += `
+        <div class="GHProject">
+          <div class="flex"> 
+            <div class="centerOb">
+              <img src='${gitdate.owner.avatar_url}'>
+              </div>
+            <div class="centerOb">
+              <h5><a href="${gitdate.owner.html_url}">${gitdate.owner.login}</a></h5>
+              </div>
+              <div class='margin-auto github-logo'>
+                <a href='https://github.com'>
+                  {% include 'icon/github.svg' %}
+                  </a>
+                </div>
+          </div>
+          <div class="TimeGH">
+          <small>${created_at}</small>
+          </div>
+
+          <h5><a href="${gitdate.html_url}">${gitdate.name}</a></h5>
+
+          <div class="descriptionGH">
+            <span>${gitdate.description}</span>
+          </div>
+          <hr>
+          <div class="flex">
+
+            <div class="Starts">
+              <small>${stargazers_count} Stars.</small>
+              </div>
+
+              <div class="margin-auto language">
+                <a href="${language_url}">
+                  <small>${gitdate.language}</small>
+                </a>
+                </div>
+
+            </div>
+          </div>
+          `
+        }
+        
+      ProjectsGitHub.innerHTML = HTML;
+    },
+  });
+</script>
+
+{% endif %}
+
+
+
+
+    {% else %}
+    <div class="profile-center bg-Color-ng border-hr highlight portfolio" dir="auto">
+      {% if portfolio != None %}
+      {{portfolio|safe}}
+      {% endif %}
+    </div>
+    {% endif %}
+</div>  
+
+  <script>
+    if ("{{tab}}" == ''){
+      let element = document.getElementById("Portfolio");
+      element.classList.add("active-button");      
+    }else{
+      let element = document.getElementById("{{tab}}");
+      element.classList.add("active-button");      
+    }
+  </script>
+  
+  <div class="profile-right">
+    <div class="rank border-hr desktop">
+      <img src="{{rank.Logo_rank.url}}">
+      <div id="data-rank1">
+        <button data-bs-toggle="collapse" data-bs-target="#Rank-number1">{{ rank.respect|shorten_number }}</button>
+
+        <div id="Rank-number1" class="collapse">
+          <p>{{rank.respect}}</p>
+        </div> 
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<script type="text/javascript">
+function fetchProfile() {
+  
+    $.ajax({
+      url: window.location.href,
+      type: "GET",
+      success: function(data, status, xhr) {
+        if (xhr.status == 200) {
+          $('#Follow_UnFollow').html($(data).find('#Follow_UnFollow').html());
+          $('#Follow-container').html($(data).find('#Follow-container').html());
+        }
+      }
+    });
+  }  
+</script>
+
+<script>
+const codeBlocks = document.querySelectorAll('pre > code');
+
+codeBlocks.forEach(codeBlock => {
+  const copyButton = document.createElement('button');
+  copyButton.className = 'copy-code-button';
+  copyButton.type = 'button';
+  copyButton.innerText = 'Copy';
+
+  codeBlock.parentNode.insertBefore(copyButton, codeBlock);
+
+  copyButton.addEventListener('click', () => {
+    const code = codeBlock.innerText;
+
+    const textarea = document.createElement('textarea');
+    textarea.value = code;
+    document.body.appendChild(textarea);
+
+    textarea.select();
+    document.execCommand('copy');
+
+    document.body.removeChild(textarea);
+
+    copyButton.innerText = 'Copied!';
+    setTimeout(() => {
+      copyButton.innerText = 'Copy';
+    }, 2000);
+  });
+});
+
+</script>
+
+<script>
+// Get all the input elements that have parent elements with tag name 'li'
+let inputs = document.querySelectorAll('li input');
+
+// Loop through each input element and add the 'task-list' class to its parent 'li' element
+inputs.forEach(function(input) {
+  input.parentElement.parentElement.classList.add('task-list');
+});
+
+</script>
+
+
+<script>
+$(document).ready(function() {
+    $('#Follow_UnFollow').submit(function(event) {
+        event.preventDefault();  
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'Followers' %}",
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(response) {
+                fetchProfile()
+              },
+        });
+    });
+});
+
+</script>
+
+{% endblock content %}

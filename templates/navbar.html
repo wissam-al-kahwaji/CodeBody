@@ -1,0 +1,584 @@
+{% load static %}
+{% load custom_filters %}
+
+
+<div class="My-navbar navbar">
+    <div class="Logo">
+        <a id="CodeBody" href="/">
+            {% include 'icon/Logo-pw.svg' %}
+        </a>
+    </div>
+    
+    {% if request.user.is_authenticated %}
+    
+    <div class="navbar-phone">
+        <div class="search-bar">
+            <form action="{% url 'home' %}?=q" method="get">
+            {% if topic == '' %}
+            <input id="search" maxlength="75" type="text" name="q" value="{{q}}" autocomplete="off" placeholder="Search..." />
+            {% else %}
+            <input id="search" maxlength="75" type="text" name="q" value="{{topic}}" autocomplete="off" placeholder="Search..." />
+            {% endif %}
+            <div class="result-loader">
+                <div class="spinner-border loader"></div>
+            </div>
+            <ul id="result">
+            </ul>
+        </form>
+    </div>
+    <div class="navbar-user-phone">
+        <ul>
+            <div class="Rank-navbar flex user-data-phone">
+                    <img src="{{ request.user.smallavatar.url }}" alt="@{{request.user.username}}">
+                    <div>
+                        {% include 'icon/Rank.svg' %} {{ request.user.rank.rank }}
+                    </div>
+                    <div class="respect">
+                        {{ request.user.rank.respect|shorten_number }}
+                    </div>
+                </div>
+                <div class="hr-list"></div>
+                <li><a href="{% url 'profile' request.user.username %}"><div id="Profile_User">Profile</div></a></li>
+                <li class="Settings-navbar"><a href="/Settings/Profile"><div>Settings</div> </a></li>
+                <div class="hr-list"></div>
+                <li class="Log-out"><a href="{% url 'logout' %}"><div style="margin-top: -2px;"> {% include 'icon/logout.svg' %} Log out</div></a></li>
+            </ul>
+        </div> 
+    </div>
+
+
+
+    <div class="margin-auto">
+        <div class="flex">
+            <div class="CodeCoin flex">
+                <div class="CodeCoin-svg">
+                    {% include 'CodeCoin/CodeCoin.svg' %}
+                </div>
+                <div class="CodeCoin-count effect_text_bottom">
+                    {{request.user.CodeCoin}}
+                </div>
+            </div>
+
+            <div class="notification-navbar">
+                <div>
+                    <a id="Noti_navbar">
+                        {% include 'icon/notification.svg' %}
+                        <div class="NewNoti"></div>
+                    </a>
+                </div>
+                <div id="NotiAjax">
+                    <div class="NotiAjax-loader">
+                        <div class="spinner-border loader"></div>
+                    </div>
+                    <div>
+                        <ul id="NotiAjax_result">
+                            <div class="NotiAjax_Title">
+                                Notification
+                            </div>
+
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-navbar">
+                {% include 'icon/menu.svg' %}
+            </div>
+
+            <div class="navbar-user">
+                <div class="dropdown">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                        <img src="{{ request.user.smallavatar.url }}" alt="@{{request.user.username}}">
+                    </button>
+                    <ul class="dropdown-menu border-hr">
+                        <div class="Rank-navbar flex">
+                            <div>
+                                {% include 'icon/Rank.svg' %} {{ request.user.rank.rank }}
+                            </div>
+                        </div>
+                        <div class="respect">
+                            <div class="Rrespect">
+                                {{ request.user.rank.respect|shorten_number }}
+                            </div>
+                        </div>
+
+                        <div class="hr-list"></div>
+                        <li><a href="{% url 'profile' request.user.username %}"><div>Profile</div></a></li>
+                        <li class="Settings-navbar"><a href="/Settings/Profile"><div>Settings</div> </a></li>
+                        <div class="hr-list"></div>
+                        <li class="Log-out"><a href="{% url 'logout' %}"><div style="margin-top: -2px;"> {% include 'icon/logout.svg' %} Log out</div></a></li>
+                    </ul>
+                </div> 
+            </div>
+        </div>
+
+        {% else %}
+        <div class="login">
+            <a href="{% url 'login' %}">Log in {% include 'icon/login.svg' %}</a>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+
+{% if request.user.is_authenticated %}
+
+<div class="toast connect-error fade show position-fixed bottom-0 end-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-body">
+                Server connection lost
+        <div class="mt-2 pt-2 border-top">
+            <button type="button" class="ReConnect btn btn-primary btn-sm">ReConnect</button>
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="toast">Close</button>
+        </div>
+        </div>        
+        </div>
+    
+        <div id="notification">
+        </div>
+
+        <div id="Scrool-to-top" class="effect_text_bottom animation-1s">{% include 'icon/upmore.svg' %}</div>
+
+            
+<script>
+
+
+function TimeNow(time) {
+    // i Use this from here : 
+        // https://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
+        
+switch (typeof time) {
+    case 'number':
+        break;
+    case 'string':
+        time = +new Date(time);
+        break;
+    case 'object':
+        if (time.constructor === Date) time = time.getTime();
+        break;
+    default:
+        time = +new Date();
+    }
+    var time_formats = [
+    [60, 'seconds', 1], // 60
+    [120, '1 minute ago', '1 minute from now'], // 60*2
+    [3600, 'minutes', 60], // 60*60, 60
+    [7200, '1 hour ago', '1 hour from now'], // 60*60*2
+    [86400, 'hours', 3600], // 60*60*24, 60*60
+    [172800, 'Yesterday', 'Tomorrow'], // 60*60*24*2
+    [604800, 'days', 86400], // 60*60*24*7, 60*60*24
+    [1209600, 'Last week', 'Next week'], // 60*60*24*7*4*2
+    [2419200, 'weeks', 604800], // 60*60*24*7*4, 60*60*24*7
+    [4838400, 'Last month', 'Next month'], // 60*60*24*7*4*2
+    [29030400, 'months', 2419200], // 60*60*24*7*4*12, 60*60*24*7*4
+    [58060800, 'Last year', 'Next year'], // 60*60*24*7*4*12*2
+    [2903040000, 'years', 29030400], // 60*60*24*7*4*12*100, 60*60*24*7*4*12
+    [5806080000, 'Last century', 'Next century'], // 60*60*24*7*4*12*100*2
+    [58060800000, 'centuries', 2903040000] // 60*60*24*7*4*12*100*20, 60*60*24*7*4*12*100
+    ];
+    var seconds = (+new Date() - time) / 1000,
+    token = 'ago',
+    list_choice = 1;
+
+    if (seconds == 0) {
+    return 'Just now'
+    }
+    if (seconds < 0) {
+    seconds = Math.abs(seconds);
+    token = 'from now';
+    list_choice = 2;
+    }
+    var i = 0,
+    format;
+    while (format = time_formats[i++])
+    if (seconds < format[0]) {
+        if (typeof format[2] == 'string')
+        return format[list_choice];
+        else
+        return Math.floor(seconds / format[2]) + ' ' + format[1] + ' ' + token;
+    }
+        return time;
+    }
+
+    document.addEventListener('DOMContentLoaded', event => {
+    let input = document.querySelector('#search');
+    let result = document.querySelector('#result');
+    let result_loader = document.querySelector('.result-loader');
+    let NotiNavbar = document.querySelector("#Noti_navbar");
+    let NotiAjax_loader = document.querySelector(".NotiAjax-loader");
+    let NotiAjax_result = document.querySelector("#NotiAjax_result");
+    let navbar_phone = document.querySelector(".navbar-phone");
+    let navbar_user_phone = document.querySelector(".navbar-user-phone");
+    let My_navbar = document.querySelector(".My-navbar");
+    let menu_navbar = document.querySelector(".menu-navbar");
+    let CodeCoin_video = document.querySelector(".CodeCoin-video");
+    let CodeCoin_svg = document.querySelector(".CodeCoin-svg");
+    let CodeCoin_count = document.querySelector(".CodeCoin-count");
+    let connect_error = document.querySelector(".connect-error");
+    let ReConnect = document.querySelector(".ReConnect");
+    let menuNavbar = document.querySelector('.menu-navbar');
+    let New_Noti = document.querySelector('.NewNoti');
+    let serverConnect = false; 
+    let datacount = 0
+    let More_Notification;
+    let NotiAjax_start = 0 ;
+    let NotiAjax_End = 5;
+    let NotiAjax_length = 5;
+    let navbar_phone_show = false;
+    let resize_width = true;
+    let NotiAjax_read = false;
+    let NotiAjax_open = false;
+    let notification_time = '';
+    let TimeSearch;
+
+    
+
+
+
+    input.addEventListener('input', function(event) {
+        function search_Tool(){
+        let html = '';
+        $.ajax({
+        url: "{% url 'Search' %}",
+        type:'POST',
+        data: {
+            'input': input.value},
+        success: function(data) {
+            for (user of data.users) {
+                html += `<li><a href="/profile/${user.username}"><div class="flex user-image"> <div class="text_lenght"><img src="/images/${user.smallavatar}"></div> <div>${user.username}</div> <small id="topic_Search">User ↵</small></div></a></li>`;
+            }                        
+            for (topic of data.topics) {
+                html += `<li><a href="{% url 'home' %}?topic=${topic.name}"><div class="flex"> <div class="text_lenght">{% include 'icon/hastag.svg' %}</div> <div class="text_lenght"> ${topic.name} </div></div></a></li>`;
+            }
+            for (discussion of data.discussions) {
+                html += `<li><a href="/discussion/${discussion.id}"><div class="flex"><div>{% include 'icon/users-alt.svg' %}</div> <div class="text_lenght"> ${discussion.title}</div></div></a></li>`;
+            }
+            html += `<li style="border-radius: 0 0 10px 10px;"><a href="/?q=${input.value}"><div class="flex"> <div>{% include 'icon/search.svg' %}</div> <div class="text_lenght">${input.value}</div> <small id="topic_Search"> All Code Body ↵</small></div></a></li>`;
+            result_loader.style.display="none";
+            result.innerHTML = html;
+            result.style.display="block";
+        }
+            });
+        }
+
+        if (input.value) {
+            result_loader.style.display="block";
+            result.style.display="none";
+            clearTimeout(TimeSearch);
+            TimeSearch = setTimeout(search_Tool, 1000);
+        } else {
+            result.innerHTML = '';
+            result.style.display="none";
+        }
+    });
+    input.addEventListener("focus", function() { 
+        result.style.display="block";
+    });
+    input.addEventListener("blur", function() {
+        setTimeout(function() {
+    result.style.display="none";
+}, 200); 
+});
+result.addEventListener("mouseover", function(event) {
+let topic_Search = event.target.querySelector('#topic_Search');
+if (topic_Search) {
+    topic_Search.style.display = "block";
+}
+});
+result.addEventListener("mouseout", function(event) {
+let topic_Search = event.target.querySelector('#topic_Search');
+if (topic_Search) {
+    topic_Search.style.display = "none";
+}
+});
+
+document.addEventListener('keydown', function(event) {
+    if (event.ctrlKey && event.key.toLowerCase() === 'f') {
+            event.preventDefault();
+        if (window.innerWidth < 750) {
+            window.scrollTo({
+                top: screen,
+                behavior: 'smooth'
+                });
+                setTimeout(event => {
+                    menuNavbar.click();
+                    input.focus();
+                },500);
+        }else{
+            window.scrollTo({
+                top: screen,
+                behavior: 'smooth'
+            });
+            setTimeout(event => {
+                    input.focus();
+                },500);
+
+        }
+        }
+});
+
+
+
+
+    
+NotiNavbar.addEventListener("click", function(event){
+    if (NotiAjax_read === false){
+        let HTML = '';
+        NotiAjax_loader.style.display = 'block';
+        NotiAjax_result.style.display = 'none';
+        $.ajax ({
+            url: "/Notification/",
+            data:{
+                'start':NotiAjax_start,
+                'end':NotiAjax_End,
+            },
+            success: function(data){
+                for(let noti of data){
+                let timenow = '';
+                timenow = TimeNow(noti.created);
+                    HTML += `<li id="noti_title"><div class="noti"><a href="${noti.url}">  <div class="flex"><sup class="margin-auto" >${timenow}</sup></div> <div class="title"> ${noti.title} </div><a></div></li>`;
+                    }
+                    
+                HTML += `<li id="More_Notification"><a><div class="MoreNoti">More  {% include 'icon/downmore.svg' %} </div></a></li>`;
+                NotiAjax_result.innerHTML += HTML;
+                NotiAjax_loader.style.display = 'none';
+                NotiAjax_result.style.display = 'block';
+                NotiAjax_read = true;
+                NotiAjax_open = true;
+                New_Noti.style.display = 'none';
+            }
+        });
+    }
+
+    if (NotiAjax_open === false){
+        NotiAjax_result.style.display = 'block';
+        NotiAjax_open = true;
+        let NotiAjax_resultList = document.getElementById("NotiAjax_result");
+        NotiAjax_resultList.scrollTop = 0;
+    } else if (NotiAjax_open === true){
+        NotiAjax_result.style.display = 'none';
+        NotiAjax_loader.style.display = 'none';
+        NotiAjax_open = false;
+    }
+})
+
+document.addEventListener("click", function(event){
+    const element = event.target;
+    if (NotiAjax_open === true && !NotiNavbar.contains(element) && !NotiAjax_result.contains(element)){
+        NotiAjax_result.style.display = 'none';
+        NotiAjax_loader.style.display = 'none';
+        NotiAjax_open = false;
+    }
+    if (element.className === 'MoreNoti'){
+        let HTML = '';
+        NotiAjax_start = NotiAjax_End + 1 ;
+        NotiAjax_End = NotiAjax_start + NotiAjax_length;
+        NotiAjax_loader.style.display = 'block';
+        NotiAjax_result.style.display = 'none';
+        $.ajax ({
+            url: "/Notification/",
+            data:{
+                'start': NotiAjax_start,
+                'end': NotiAjax_End,
+            },
+            success: function(data){
+                if (data.error == 'NotData'){
+                    More_Notification = document.querySelector("#More_Notification");
+                    More_Notification.remove();
+                    HTML += `<li id="More_Notification"><div class="DoneNoti">Done</div></li>`;
+                    NotiAjax_result.innerHTML += HTML;
+                    NotiAjax_loader.style.display = 'none';
+                    NotiAjax_result.style.display = 'block';
+                    NotiAjax_read = true;
+                    NotiAjax_open = true;
+                }else{
+                    for(let noti of data){
+                        let timenow = '';
+                        timenow = TimeNow(noti.created);
+                        HTML += `<li id="noti_title"><div class="noti"><a href="${noti.url}">  <div class="flex"><sup class="margin-auto" >${timenow}</sup></div> <div class="title"> ${noti.title} </div><a></div></li>`;
+                        }
+                        More_Notification = document.querySelector("#More_Notification");
+                        More_Notification.remove();
+                        HTML += `<li id="More_Notification"><a><div class="MoreNoti">More  {% include 'icon/downmore.svg' %}</div></a></li>`;
+                    NotiAjax_result.innerHTML += HTML;
+                    NotiAjax_loader.style.display = 'none';
+                    NotiAjax_result.style.display = 'block';
+                    NotiAjax_read = true;
+                    NotiAjax_open = true;
+                }
+            }
+        });
+    }
+});
+
+    menu_navbar.addEventListener("click", function(){
+        if(navbar_phone_show === false){
+            My_navbar.style.paddingBottom ="284px";
+            navbar_phone.style.display="block";
+            navbar_user_phone.style.display="block";
+            navbar_phone_show = true;
+        }else if (navbar_phone_show === true){
+            My_navbar.style.padding ="8px 20px 8px 20px";
+            navbar_phone.style.display="none";
+            navbar_user_phone.style.display="none";
+            navbar_phone_show = false;
+        }
+    });
+    window.addEventListener("resize", function() {
+        if (window.innerWidth > 750) {
+        My_navbar.style.padding ="8px 20px 8px 20px";
+        navbar_phone.style.display="block";
+        navbar_user_phone.style.display="none";
+        navbar_phone_show = false;
+        resize_width = false
+    }else if (window.innerWidth < 750){
+        if (resize_width === false){
+            My_navbar.style.padding ="8px 20px 8px 20px";
+            navbar_phone.style.display="none";
+            navbar_user_phone.style.display="none";
+            navbar_phone_show = false;
+            resize_width = true;
+        }
+    }
+});
+
+        ReConnect.addEventListener("click", function() {
+        location.replace(location.href)
+        });
+
+    
+        if(typeof(EventSource) !== "undefined") {
+        var Data_Count_notification = new EventSource("{% url 'Data_notification' %}");
+        Data_Count_notification.onmessage = function(event) {
+        if (serverConnect === false){
+        connect_error.style.display = "none";
+        serverConnect = true;
+        }
+        const Data_notification = JSON.parse(event.data);
+        if (NotiAjax_read == true && typeof Data_notification.noti_read !== 'undefined' ){
+            if (Data_notification.noti_read > 0){
+                NotiAjax_read = false;
+                NotiAjax_start = 0 ;
+                NotiAjax_End = 5;
+                NotiAjax_result.style.display = 'none';
+                NotiAjax_result.innerHTML = '';
+            }
+        }
+        if (Data_notification.noti_read > 0 && typeof Data_notification.noti_read !== 'undefined'){
+            New_Noti.style.display = 'block';
+        }
+
+        if (Data_notification.notification != 'null' && typeof Data_notification.notification !== 'undefined' ){
+            html = ''
+            html = `<div class="toast align-items-center border-0 fade show effect_text_bottom notification-bg" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <a href="${Data_notification.notification_url}">
+                        <small><p>Notification</p></small>{% include 'icon/notification.svg' %} ${Data_notification.notification}</a></div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>`
+        const newNotification = document.createElement('div');
+        newNotification.innerHTML = html;
+        notification.appendChild(newNotification);
+        let notificationsList = document.getElementById("notification");
+        notificationsList.scrollTop = notificationsList.scrollHeight;
+    }
+    Remove_notification();
+    Data_Count_notification.onerror = function(event) {
+        setTimeout(() => {
+            serverConnect = false;
+            notification.innerHTML= '';   
+            connect_error.style.display = "block";
+        },10000)
+    };
+};
+    function Remove_notification(){
+        if (notification.firstChild != null && typeof notification.firstChild !== 'undefined' && notification.firstChild != ''){
+            setTimeout(() => {
+            if (notification.firstChild != null && typeof notification.firstChild !== 'undefined' && notification.firstChild != ''){
+            notification.firstChild.remove();
+                }
+            },15000);}}
+
+    function close_EventSource() {
+        Data_Count_notification.close()
+        if (typeof Data_status_discussion != "undefined"){
+            Data_status_discussion.close()
+        }
+        if (typeof Data_Count_discussion != "undefined"){
+            Data_Count_discussion.close()
+        }
+        notification.innerHTML= '';
+        connect_error.style.display = "block";
+        serverConnect = false;
+    }
+
+window.addEventListener("mousemove", resetTimer);
+window.addEventListener("keydown", resetTimer);
+
+var timeoutID = setTimeout(close_EventSource, 300000);
+
+function resetTimer() {
+    if (serverConnect === true){
+        clearTimeout(timeoutID);
+        timeoutID = setTimeout(close_EventSource, 300000);
+        return
+    }else{return}}
+}});    
+
+let Scrool_to_top = document.getElementById('Scrool-to-top');
+let scroll_Show = false;
+
+$(window).on('scroll', function() {
+    if ($(this).scrollTop() >= 500) {
+        if (scroll_Show === false){
+            scroll_Show = true;
+            Scrool_to_top.classList.remove('effect_hide_text_bottom');
+            Scrool_to_top.classList.add('effect_text_bottom');
+            $('#Scrool-to-top').show();
+        }
+    } else {
+        if (scroll_Show === true){
+            scroll_Show = false;
+            Scrool_to_top.classList.remove('effect_text_bottom');
+            Scrool_to_top.classList.add('effect_hide_text_bottom');
+            setTimeout(event => {
+                scroll_Show = false;
+                $('#Scrool-to-top').hide();
+            },700)
+        }
+    }
+});
+
+Scrool_to_top.addEventListener('click',function(){
+    window.scrollTo({
+        top: screen,
+        behavior: 'smooth'
+    });
+});
+
+let CodeBody = document.getElementById('CodeBody');
+document.addEventListener('keydown', function(event) {
+    if (event.ctrlKey && event.key.toLowerCase() === 'r') {
+        event.preventDefault();
+        window.scrollTo({
+        top: screen,
+        behavior: 'smooth'
+    });
+    }
+    if (event.ctrlKey && event.key.toLowerCase() === 'u') {
+        event.preventDefault();
+        Profile_User.click();
+    }
+    if (event.ctrlKey && event.key === '/') {
+        event.preventDefault();
+        CodeBody.click();
+    }
+});
+
+</script>
+
+
+
+    {% endif %}

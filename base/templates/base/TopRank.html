@@ -1,0 +1,21 @@
+{% load custom_filters %}
+<div>
+    <h5>Top Three Ranks</h5>
+</div>
+<div class="Top_Rank">
+    {% for Ranks in TopRank %}
+        <div class="effect_text_top animation-1s TopRank_List border-hr">
+            <div class="flex">
+                <div class="img_TopRank">
+                    <img src="{{ Ranks.user.smallavatar.url }}" alt="">
+                </div>
+                <div class="Data_TopRank">
+                    <a href="profile/{{ Ranks.user.username }}">
+                        <p>{{ Ranks.user.name }}</p></a>
+                        <small>{{ Ranks.rank }}</small>
+                        <small>{{ Ranks.respect|shorten_number }}</small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+</div>

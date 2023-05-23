@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{page}} | Code Body</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'icon/Logo-pw.ico' %}">
+    <script src="{% static 'js/jQuery.js' %}"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="{% static 'styles/style.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/code.css' %}">
+</head>
+<body id="Screen">
+
+
+
+
+    <div class="Login-Logo">
+        <div class="Logo flex">
+            <a href="/">
+                {% include 'icon/Logo-pw.svg' %}
+            </a>
+        </div>
+        <h4>
+            {{page}} to Code Body
+        </h4>
+    </div>
+
+{% if page == 'Login' %}
+<div class="Login_Form">
+    <div class="message-Error">
+        {% if messages %}
+        {% for massage in messages %}
+        <div class="alert alert-danger" role="alert">
+            {{massage}}
+          </div>
+          {% endfor %}
+          {% endif %}
+        </div>
+
+
+        <form action="" method="post">
+            {% csrf_token %}
+            <div>
+                <label>Username</label>
+                <small id="username_Error" class="error-Title effect_text_bottom animation-1s"><p> Username is incorrect </p></small>
+                <input id="id_username" type="text" autofocus autocomplete="off" name="username" placeholder="username" />
+            </div>
+            <div>
+                <label>Password</label>
+                <br>
+                <input type="password" name="password" placeholder="password"/>
+            </div>
+            <div>
+                <input id="submitLogIn" disabled="" class="btn btn-primary" type="submit" value="Login" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="RegisterLink">
+    New to Code Body?  
+    <a href="{% url 'register' %}">Create an account.</a>
+</div>
+
+
+<script>
+
+    let CharkUsername_BOL = false;
+    let TimeUserName;
+
+
+    function Hide_OB(OB){
+            OB.classList.remove('effect_text_bottom');
+            OB.classList.add('effect_hide_text_bottom');
+            setTimeout(event => {
+            OB.style.display = 'none';
+            OB.classList.add('effect_text_bottom');
+            OB.classList.remove('effect_hide_text_bottom');
+        },900)
+    }
+
+        function CharkUsername(input){
+        $.ajax({
+            url:"{% url 'ChackUsername' %}",
+            type:'POST',
+            data:{
+                "input":input,
+            },
+            success:function(data){
+                if (data.status === 'true'){
+                    id_username.style.border = '1px var(--Error_color) solid';
+                    username_Error.style.display = 'block';
+                    submitLogIn.setAttribute('disabled','');
+                    
+                                }
+                if (data.status === 'false'){
+                    id_username.style.border = '1px var(--hr_color) solid';
+                    Hide_OB(username_Error);
+                    submitLogIn.removeAttribute('disabled');
+                }
+            }
+        });
+    }
+
+    id_username.addEventListener('input', function(){
+        clearTimeout(TimeUserName);
+            TimeUserName = setTimeout(event =>{
+                CharkUsername(id_username.value);
+            }, 500);
+    });
+    
+
+</script>
+
+{% else %}
+<div class="Login_Form">
+
+    <div class="message-Error">
+        {% if messages %}
+        {% for massage in messages %}
+        <div class="alert alert-danger" role="alert">
+            {{massage}}
+          </div>
+          {% endfor %}
+          {% endif %}
+        </div>
+
+    <form action="" method="post">
+        {% csrf_token %}
+        <div>
+            <label>Username</label>
+            <small id="username_Error" class="error-Title effect_text_bottom animation-1s"><p> Username already used </p></small>
+            <small id="username_2error" class="error-Title effect_text_bottom animation-1s"><p> The Username must contain only lowercase letters and English numbers and you can use: "-". <br> It must be at least 3 characters long.</p></small>
+            {{form.username}}
+        </div>
+        <div>
+            <label>First Name</label>
+            {{form.first_name}}
+        </div>
+        <div>
+            <label>Last Name</label>
+            {{form.last_name}}
+        </div>
+        <div>
+            <label>Email</label>
+            <small id="email_Error" class="error-Title effect_text_bottom animation-1s"><p> Email already used </p></small>
+            <small id="email_2error" class="error-Title effect_text_bottom animation-1s"><p>You cannot use spaces in Email</p></small>
+            {{form.email}}
+        </div>
+        <div>
+            <label>Birth Date</label>
+            <small id="birthDate_Error" class="error-Title effect_text_bottom animation-1s"><p> Age less than 18 years </p></small>
+            {{form.birth_date}}
+        </div>
+        <div>
+            <label>Password</label>
+            {{form.password1}}
+            <span id="BarStatusPassword"></span>
+            <small id="statusPassword"></small>
+        </div>
+        <div>
+            <label class="margin-top">Confirm Password</label>
+            <small id="password2_Error" class="error-Title effect_text_bottom animation-1s"><p>Password does not match</p></small>
+            {{form.password2}}
+        </div>
+        
+        <input id="submitRegister" type="submit" class="btn btn-primary" disabled="" value="Register" />
+        
+    </form>
+</div>
+
+<div class="RegisterLink">
+    Do you have a Code Body account?  
+    <a href="{% url 'login' %}">Log in.</a>
+</div>
+
+
+<script>
+    id_username.value = '';
+    id_first_name.value = '';
+    id_last_name.value = '';
+    id_email.value = '';
+    id_birth_date.value = '';
+
+</script>
+
+
+<script>
+
+    let TimeEmail;
+    let TimeUsername;
+    let isEighteen = false;
+    let BOL_CharkUsername = false;
+    let BOL_CharkPassword = false;
+    let BOL_CharkPassword2 = false;
+    let BOL_CharkEmail = false;
+    let BOL_FirstName = false;
+    let BOL_LastName = false;
+
+
+    function chackFLName(input){
+        if (input.length < 2 || input.length >= 15 ){
+            return false;
+        }else {
+            return true;
+        }
+    }
+
+    function Hide_OB(OB){
+            OB.classList.remove('effect_text_bottom');
+            OB.classList.add('effect_hide_text_bottom');
+            setTimeout(event => {
+            OB.style.display = 'none';
+            OB.classList.add('effect_text_bottom');
+            OB.classList.remove('effect_hide_text_bottom');
+        },900)
+    }
+
+    function CharkPassword(password){
+
+  var regexWeak = /^(?=.*\d)(?=.*[a-zA-Z]).{6,}$/;
+  var regexMedium = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/;
+  var regexStrong = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z])(?=.*[@#$%^&+=]).{10,}$/;
+  
+  if (regexStrong.test(password)) {
+    return 3;
+  } else if (regexMedium.test(password)) {
+    return 2;
+  } else if (regexWeak.test(password)) {
+    return 1;
+  } else {
+    return 0 ;
+  }
+
+    }
+
+    function CharkPassword2(){
+        if (id_password2.value != id_password1.value){
+            id_password2.style.border = '1px var(--Error_color) solid';
+            password2_Error.style.display='block';   
+            BOL_CharkPassword2 = false;
+        }else{
+            id_password2.style.border = '1px var(--hr_color) solid';
+            Hide_OB(password2_Error);
+            BOL_CharkPassword2 = true;
+        }
+    }
+
+    function checkUsernameRegex (username) {
+        const regex = /^[A-Za-z0-9-]{3,}$/;
+        return regex.test(username);
+    }
+
+    function checkWhitespace(text) {
+        if (text.includes(' ')) {
+            return true; 
+        } else {
+            return false;
+        }
+    }
+
+    function CharkUsername(input){
+        const Test_Username = checkUsernameRegex(input);
+        if (Test_Username == false){
+            id_username.style.border = '1px var(--Error_color) solid';
+            username_2error.style.display = 'block';
+            Hide_OB(username_Error);
+            BOL_CharkUsername = false;
+            return;
+        }
+        if (Test_Username == true) {
+            id_username.style.border = '1px var(--hr_color) solid';
+            Hide_OB(username_2error);}
+
+        $.ajax({
+            url:"{% url 'ChackUsername' %}",
+            type:'POST',
+            data:{
+                "input":input,
+            },
+            success:function(data){
+                if (data.status === 'true'){
+                    id_username.style.border = '1px var(--hr_color) solid';
+                    Hide_OB(username_Error);
+                    BOL_CharkUsername = true;
+                }
+                if (data.status === 'false'){
+                    id_username.style.border = '1px var(--Error_color) solid';
+                    username_Error.style.display = 'block';
+                    BOL_CharkUsername = false;
+                }
+            }
+        });
+    }
+    
+    function CharkEmail(input){
+        Test_email = checkWhitespace(input);
+        if (Test_email == true){
+            id_email.style.border = '1px var(--Error_color) solid';
+            email_2error.style.display = 'block';
+            BOL_Charkemail = false;
+            Hide_OB(email_Error);
+            return;
+        }
+        if (Test_email == false){
+            id_email.style.border = '1px var(--hr_color) solid';
+            Hide_OB(email_2error);
+        }
+        $.ajax({
+            url:"{% url 'ChackEmail' %}",
+            type:'POST',
+            data:{
+                "input":input
+            },
+            success:function(data){
+                if (data.status === 'true'){
+                    id_email.style.border = '1px var(--hr_color) solid';
+                    Hide_OB(email_Error);
+                    BOL_CharkEmail = true;
+                }
+                if (data.status === 'false'){
+                    id_email.style.border = '1px var(--Error_color) solid';
+                    email_Error.style.display = 'block';
+                    BOL_CharkEmail = false;
+                }
+            }
+        });
+    }
+
+    id_email.addEventListener('input', function(){
+
+        clearTimeout(TimeEmail);
+            TimeEmail = setTimeout(event =>{
+                CharkEmail(id_email.value);        
+            }, 1000);
+});
+    id_username.addEventListener('input', function(){
+        clearTimeout(TimeUsername);
+            TimeUsername = setTimeout(event =>{
+                CharkUsername(id_username.value);        
+            }, 1000);
+});
+
+id_password2.addEventListener('input', CharkPassword2);
+id_password1.addEventListener('input', CharkPassword2);
+id_password1.addEventListener('input', function(){
+    var chakpas = CharkPassword(id_password1.value);
+    if (chakpas === 2){
+        BarStatusPassword.style.width='60%';
+        BarStatusPassword.style.background='#fdee09';
+        statusPassword.innerHTML='Medium'     
+        id_password1.style.border='1px var(--hr_color) solid';
+        BOL_CharkPassword = true;
+        
+    }
+    else if (chakpas === 3){
+        BarStatusPassword.style.width='100%';
+        BarStatusPassword.style.background='#14ff00';
+        statusPassword.innerHTML='Strong'     
+        id_password1.style.border='1px var(--hr_color) solid';
+        BOL_CharkPassword = true;
+    }
+    else {
+        BarStatusPassword.style.width='30%';
+        BarStatusPassword.style.background='#c90000';
+        statusPassword.innerHTML='Weak'     
+        id_password1.style.border='1px var(--hr_color) solid';
+        BOL_CharkPassword = false;
+    }
+});
+
+function checkAge(dateOfBirth) {
+  const dob = new Date(dateOfBirth);
+
+  const ageDiffMilliseconds = Date.now() - dob.getTime();
+
+  const ageDate = new Date(ageDiffMilliseconds);
+  const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+
+  if (age >= 18) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+id_birth_date.addEventListener('input', function(){
+
+    isEighteen = checkAge(id_birth_date.value);
+    if (isEighteen == false){
+        id_birth_date.style.border = '1px var(--Error_color) solid';
+        birthDate_Error.style.display = 'block'
+    }else{
+        id_birth_date.style.border = '1px var(--hr_color) solid';
+        Hide_OB(birthDate_Error)
+    }
+});
+
+
+id_first_name.addEventListener('input', function(){
+    TestFirst = chackFLName(id_first_name.value);
+    if (TestFirst === true){
+        BOL_FirstName = true;
+        id_first_name.style.border = '1px var(--hr_color) solid';   
+    }
+    else{
+        BOL_FirstName = false;     
+        id_first_name.style.border = '1px var(--Error_color) solid';   
+    }
+});
+
+id_last_name.addEventListener('input', function(){
+    TestLast = chackFLName(id_last_name.value);
+    if (TestLast === true){
+        BOL_LastName = true;
+        id_last_name.style.border = '1px var(--hr_color) solid';  
+    }
+    else{
+        BOL_LastName = false;      
+        id_last_name.style.border = '1px var(--Error_color) solid';  
+    }
+});
+
+
+function ChackAll(){
+        if (isEighteen === true && BOL_CharkUsername === true && BOL_CharkPassword === true
+        && BOL_CharkPassword2 === true && BOL_CharkEmail === true && BOL_FirstName === true && BOL_LastName === true ){
+            submitRegister.removeAttribute('disabled');
+            RunChackAll === true;
+        } else {
+            submitRegister.setAttribute('disabled','');
+            RunChackAll === false;
+        }
+
+}
+
+
+document.addEventListener('click', ChackAll);
+document.addEventListener('keyup', ChackAll);
+
+
+</script>
+
+{% endif %}
+
+
+
+
+<div id="loader" class="LogoLoader">
+    {% include 'icon/Logo-pw.svg' %}
+  </div>
+
+<script>
+    let LoaderKey = sessionStorage.getItem("loader");
+    let screen = document.querySelector('#Screen');
+    if (LoaderKey != 'OK'){
+      screen.style.overflow = "hidden";
+      setTimeout(function(){
+        var loader = document.getElementById("loader");
+        sessionStorage.setItem("loader", "OK");
+        screen.style.overflow = "auto";
+        loader.style.display = "none";
+      }, 3000);
+    }
+    else {
+      loader.style.display = "none";
+    }
+
+</script>
+</body>
+</html>

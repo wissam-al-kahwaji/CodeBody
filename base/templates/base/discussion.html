@@ -1,0 +1,491 @@
+{% extends 'main.html' %}
+
+{% block title %} {{discussion.title}} | {{discussion.name.username}} {% endblock title %}
+
+{% block content %} 
+
+{% load custom_filters %}
+
+    <div class="discussion-container">
+        
+    <div>
+            <div class="discussion_Data border-hr">
+
+                <div class="discussion_title">
+                    <div class="flex">
+
+                    <div class="flex discussion_user_container">
+                        <div class="discussion_title_images">
+                            <img src="{{discussion.name.smallavatar.url}}" alt="">
+                        </div>
+
+                            <div class="discussion_user">
+                                <a href="/profile/{{discussion.name.username}}">{{discussion.name.name}}</a>
+                                <small>
+                                    <p>
+                                        {{discussion.name.rank.rank}}
+                                    </p>
+                                </small>
+                            </div>
+
+                        </div>
+                        {% if request.user == discussion.name %}
+                        <div class="margin-auto">
+                            <div class="dropdown more-drop">
+                                <button type="button" class="more" data-bs-toggle="dropdown">
+                                    {% include 'icon/more.svg' %} 
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{% url 'update-discussion' discussion.id %}">{% include 'icon/Edit.svg' %} Edit</a></li>
+                                    <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#Delete_discussion">{% include 'icon/del.svg' %} Del</a></li>
+                                </ul>
+                        </div> 
+                    </div>
+                    {% endif %}
+
+                        
+                        
+                    </div>
+
+                <h3>{{discussion.title}}</h3>
+                <div class="discussion_title_container">
+                    <div class="discussion_time">
+                        <div>
+                            {% include 'icon/time.svg' %}
+                            <small>{{discussion.created|timesince}} ago.</small>
+                        </div>
+                    </div>
+
+                        <div class="margin-auto discussion_topic">
+                            <a href="/?topic={{discussion.topic}}">
+                                <small>{{discussion.topic}}</small>
+                        </a>
+                    </div>
+                </div>
+
+                <hr>
+                <div class="discussion_content">
+                    {{content|safe}}
+                </div>
+                <hr>
+                        
+                    <div class="discussion_Data_container">
+                            <div class="flex">
+                                {% if is_Like == True %}
+                                <div id="Like-discussion">
+                                    <div class="Active-Like flex Like centerOb">
+                                        <div >{% include 'icon/Like.svg' %}</div>
+                                        <span class="CountLike">{{discussion.Likes.count|shorten_number}}</span>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div id="Like-discussion">
+                                    <div class="flex Like centerOb">
+                                            <div >{% include 'icon/Like.svg' %}</div>
+                                            <span class="CountLike">{{discussion.Likes.count|shorten_number}}</span>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if is_DisLike == True %}
+                                <div id="DisLike-discussion">
+                                    <div class="rotate-180 DisLike Active-DisLike centerOb flex">
+                                        <div>
+                                            {% include 'icon/Like.svg' %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div id="DisLike-discussion">
+                                    <div class="rotate-180 DisLike centerOb flex">
+                                        <div>
+                                            {% include 'icon/Like.svg' %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                        <div class="flex centerOb">
+                            <div class="discussion_View">
+                                <small>{{discussion.Viewss.count|shorten_number}} Views.</small>
+                            </div>
+                            <div id="Re_Comment" class="discussion_View">
+                            <small>{{discussion.comments_set.count|shorten_number}} Comments.</small>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+ 
+
+                <div class="Comments_container border-hr">
+                    <h5>Comments</h5>
+                    <div class="Comments_Views">
+                    </div>
+
+                    <div class="Create_Comments">
+                        <div class="Comments_grid">
+                            <div class="images_Comments">
+                                <img src="{{ request.user.smallavatar.url }}" alt="{{request.user.username}}">
+                            </div>
+                            <div class="Comments_textarea">
+                                <textarea id="Input_Comment"></textarea>
+                            </div>
+                        </div>
+                        <div class="Comments_Send">
+                            <input id="SubmitComment" type="submit" class="btn btn-primary" disabled="" value="Send">
+                        </div>
+                    </div>
+    
+                    
+                </div>
+
+            </div>
+
+<script>
+        let dislike_discussion = document.querySelector('#DisLike-discussion');
+        let Like_discussion = document.querySelector('#Like-discussion');
+
+function fetchRe_react() {              
+        $.ajax({
+        url: window.location.href,
+        type: "GET",
+        success: function(data, status, xhr) {
+            if (xhr.status == 200) {
+            $('#Like-discussion').html($(data).find('#Like-discussion').html());
+            $('#DisLike-discussion').html($(data).find('#DisLike-discussion').html());
+            console.log("k");
+            }
+        }
+        });
+        }
+
+    function LIKE_discussion(){
+        console.log('LIKE_discussion');
+        $.ajax({
+        url: "{% url 'CreateReact' discussion.id %}",
+        type:'POST',
+        data:{
+            "Like":'Like'
+        },
+        success: function(data){
+                fetchRe_react();
+        }
+        });        
+    }
+
+
+
+    function DISLIKE_discussion(status){
+            console.log('DISLIKE_discussion');
+            $.ajax({
+                url: "{% url 'CreateReact' discussion.id %}",
+                type: "POST",
+                data:{
+                    "DisLike":'DisLike'
+                },
+                success: function(data){
+                    fetchRe_react();
+                }
+            });
+        }
+
+    Like_discussion.addEventListener('click', LIKE_discussion);
+    dislike_discussion.addEventListener('click', DISLIKE_discussion);
+    
+</script>
+
+            
+    <script>
+
+        let start_Comment = 0;
+        let end_Comment = 10;
+        let Comment_length = 5;
+        let Comment_Data = '';
+        let Comments_Views = document.querySelector('.Comments_Views');
+        let CommentsContainer = document.querySelector('.Comments_container');
+        let SubmitComment = document.getElementById('SubmitComment');
+        let InputComment = document.getElementById('Input_Comment');
+        let Re_Comment = document.getElementById('Re_Comment');
+        let ShowComment = false;
+        let MoreComment = false;
+        let Comment_HTML = '';
+
+
+function fetchRe_Comment() {              
+    $.ajax({
+    url: window.location.href,
+    type: "GET",
+    success: function(data, status, xhr) {
+        if (xhr.status == 200) {
+        $('#Re_Comment').html($(data).find('#Re_Comment').html());
+        }
+    }
+    });
+}
+
+        function comments_Show(start,end,RE){
+            Comment_HTML = '';
+            $.ajax({
+                url:"{% url 'comments' discussion.id %}",
+            type: "POST",
+            data:{
+                "start":start,
+                "end":end,
+            },
+            success: function(data){
+                if (data.error === 'NotData'){
+                    MoreComment = true;
+                    return;
+                }
+                for(Comment_Data of data){
+                    TimeComment = TimeNow(Comment_Data.created);
+                    Comment_HTML += `
+                    <div class="Comment border-hr">
+                        <div>               
+                            <div class="flex data_user">
+                                    <div class="centerOb">
+                                    <img src='/images/${Comment_Data.img}'>
+                                    </div>
+                                    <div>
+                                        <div class="centerOb">
+                                        <small>
+                                            <a href="/profile/${Comment_Data.username}">
+                                                ${Comment_Data.FName} 
+                                                ${Comment_Data.LName}
+                                                </a>
+                                            <p class="rank_user">${Comment_Data.rank}</p>
+                                            </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                            
+                            <div class="Comment_body">
+                                <div class="Time">${TimeComment}</div>
+                                ${Comment_Data.body}
+                            </div>
+                                
+                    </div>
+                    `;
+                }
+                if (RE === true){
+                    Comments_Views.innerHTML = Comment_HTML;                    
+                }else{
+                    Comments_Views.innerHTML += Comment_HTML;                    
+                }
+            }});
+            }
+        
+
+
+window.addEventListener('scroll', function() {
+    if (ShowComment === false){
+                    if ((window.innerHeight + window.pageYOffset) >= CommentsContainer.offsetTop) {
+                        comments_Show(start_Comment,end_Comment);
+                        ShowComment = true;
+                    }
+                }
+        });
+
+        
+        
+Comments_Views.addEventListener('scroll', function() {
+  if (Comments_Views.scrollHeight - Comments_Views.scrollTop === Comments_Views.clientHeight) {
+    if (MoreComment === false){
+        start_Comment = end_Comment + 1; 
+        end_Comment = start_Comment + Comment_length;
+        comments_Show(start_Comment,end_Comment);
+        setTimeout(() => {
+            let CommentsViewsRE = document.querySelectorAll(".Comment");
+            for (let i = 0; i < CommentsViewsRE.length; i++) {
+                CommentsViewsRE[i].classList.remove("effect_text_top");
+                    }
+                },1200);
+
+    }
+}
+});
+
+
+SubmitComment.addEventListener('click', function() {
+    
+    if (InputComment.value){
+        $.ajax({
+            url:"{% url 'CreateComment' discussion.id %}",
+            type: "POST",
+            data:{
+                "InputComment":InputComment.value,
+            },
+            success: function(data){
+                if (data.status == 'True'){
+                    InputComment.value = '';
+                    SubmitComment.setAttribute('disabled','');
+                    return;
+                }
+            }
+        })
+    }
+    
+});
+
+    function CharkCommint(){
+        if (InputComment.value.length < 2 || InputComment.value.length > 1000 ){
+            SubmitComment.setAttribute('disabled','');
+        }else{
+            SubmitComment.removeAttribute('disabled','');
+        }
+    }
+    document.addEventListener('input', function(event) {CharkCommint();});
+
+
+let OLD_RE = false;
+if(typeof(EventSource) !== "undefined") {
+        var Data_Count_discussion = new EventSource("{% url 'Data_discussion' discussion.id %}");
+        Data_Count_discussion.onmessage = function(event) {
+        const Data_discussion = JSON.parse(event.data);
+        if (Data_discussion.status === true || OLD_RE === true){
+            OLD_RE = true;
+            if ( Comments_Views.scrollTop <= 840){
+                start_Comment = 0;
+                end_Comment = 10;
+                comments_Show(start_Comment,end_Comment,true);
+                OLD_RE = false;
+                MoreComment = false;
+                fetchRe_Comment();
+            }
+        }
+
+    }};
+
+    document.addEventListener('keydown', function(event) {
+
+    if (event.ctrlKey && event.key.toLowerCase() === 's') {
+        event.preventDefault();
+        SubmitComment.click();
+    }
+    });
+</script>
+
+
+            <div>
+                <div class="TopDiscussion Recommended_Content">
+                    <div class="Top-Title">
+                        <h5>Recommended Content</h5>
+                    </div>
+                    {% for Discussion in Topic_discussion %}
+                    <div class="TopDiscussion_Data border-hr effect_text_top animation-1s">
+                        <div class="TopDiscussion_User flex">
+                            <div class="TopDiscussion_img">
+                                <img src="{{ Discussion.name.smallavatar.url }}" alt="">
+                            </div>
+                            <div>
+                                    <a href="profile/{{Discussion.name.username}}">
+                                    <small>
+                                        {{ Discussion.name.name }}
+                                    </small>
+                                </a>
+                                <p>
+                                    <small>{{ Discussion.name.rank.rank }}</small>
+                                </p>
+                                </div>
+                        </div>
+                
+                        <div class="TopDiscussion_Title">
+                            <a href="/discussion/{{Discussion.id}}">
+                                <small>
+                                    {{ Discussion.title }}
+                                </small>
+                            </a>
+                        </div>
+                        <div class="flex">
+                            <div class="TopDiscussion_Topic">
+                                <a href="/?topic={{ Discussion.topic }}">
+                                    <small>
+                                        {{ Discussion.topic }}
+                                    </small>
+                                </a>
+                            </div>
+                                    </div>
+                        
+                    </div>
+                        {% endfor %}
+                        </div>
+    </div>
+
+    {% if request.user == discussion.name %}
+    <div class="modal" id="Delete_discussion">
+
+        <div class="modal-dialog width-modal-dialog">
+            <div class="modal-content">
+            <!-- Modal body -->
+            <div class="modal-body Delete-form border-hr">
+                <form id="Del_Delete_discussion" method="POST" action="">
+                    {% csrf_token %}
+                    <p>Are you sure you want to delete?</p>
+                    <div class="Delete-Discussion display_end">
+                        <input type="text" style="display: none;" name="id" value="{{discussion.id}}">
+                        <button id="Close-discussion" type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                        <input class="btn btn-danger" type="Submit" value="Delete">
+                    </div>
+                </form>
+            </div>
+            </div>
+        </div>
+    </div>
+
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                const Close_discussion = document.querySelector('#Close-discussion');
+                $(document).ready(function() {
+            $('#Del_Delete_discussion').submit(function(event) {
+                    event.preventDefault();  
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'delete-discussion' discussion.id %}",
+                    dataType: 'json',
+                    success: function(response) {
+                    location.replace("{% url 'home' %}");
+                        },
+                    });
+                });
+            });
+            });
+            </script>
+{% endif %}
+
+<script>
+    const codeBlocks = document.querySelectorAll('pre > code');
+    
+    codeBlocks.forEach(codeBlock => {
+      const copyButton = document.createElement('button');
+      copyButton.className = 'copy-code-button';
+      copyButton.type = 'button';
+      copyButton.innerText = 'Copy';
+    
+      codeBlock.parentNode.insertBefore(copyButton, codeBlock);
+    
+      copyButton.addEventListener('click', () => {
+        const code = codeBlock.innerText;
+    
+        const textarea = document.createElement('textarea');
+        textarea.value = code;
+        document.body.appendChild(textarea);
+    
+        textarea.select();
+        document.execCommand('copy');
+    
+        document.body.removeChild(textarea);
+    
+        copyButton.innerText = 'Copied!';
+        setTimeout(() => {
+          copyButton.innerText = 'Copy';
+        }, 2000);
+      });
+    });
+    
+    </script>
+    
+{% endblock content %}

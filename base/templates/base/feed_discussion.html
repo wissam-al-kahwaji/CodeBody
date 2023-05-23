@@ -1,0 +1,128 @@
+{% load static %}
+{% load custom_filters %}
+
+    {% for discussion in discussions %}
+    <div class="content-discussion border-hr">
+            <div class="flex top-discussion">  
+                <div>
+                    <div class="flex">
+                        <div style="margin: auto;">
+                            <img src="{{ discussion.name.smallavatar.url }}" alt="">
+                        </div>
+                        <div>
+                            <a href="{% url 'profile' discussion.name.username %}">
+                                {{ discussion.name.name }}</a>
+                                <div class="Rank">
+                                    <span>{{ discussion.rank }}</span>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+                {% if request.user == discussion.name %}
+                    <div class="margin-auto">
+                        <div class="dropdown more-drop">
+                            <button type="button" class="more" data-bs-toggle="dropdown">
+                                {% include 'icon/more.svg' %} 
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'update-discussion' discussion.id %}">{% include 'icon/Edit.svg' %} Edit</a></li>
+                                <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#Delete_discussion{{discussion.id}}">{% include 'icon/del.svg' %} Del</a></li>
+                            </ul>
+                            </div> 
+                    </div>
+                    
+                    <div class="modal" id="Delete_discussion{{discussion.id}}">
+                
+                        <div class="modal-dialog width-modal-dialog">
+                            <div class="modal-content">
+                            <!-- Modal body -->
+                            <div class="modal-body Delete-form border-hr">
+                                <form id="Del_{{discussion.id}}" method="POST" action="">
+                                    {% csrf_token %}
+                                    <p>Are you sure you want to delete?</p>
+                                    <div class="Delete-Discussion display_end">
+                                        <input type="text" style="display: none;" name="id" value="{{discussion.id}}">
+                                        <button id="Close_{{discussion.id}}" type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                                        <input class="btn btn-danger" type="Submit" value="Delete">
+                                    </div>
+                                </form>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                
+                
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const Close_{{discussion.id}} = document.querySelector('#Close_{{discussion.id}}');
+    $(document).ready(function() {
+$('#Del_{{discussion.id}}').submit(function(event) {
+        event.preventDefault();  
+    $.ajax({
+        type: 'POST',
+        url: "{% url 'delete-discussion' discussion.id %}",
+        dataType: 'json',
+        success: function(response) {
+        location.replace(location.href);
+            },
+        });
+    });
+});
+});
+</script>
+                {% endif %}
+                
+            </div> 
+            <div class="times flex">
+                {{discussion.created|timesince}} ago
+            </div>
+            <a href="{% url 'discussion' discussion.id %}"><h4 class="discussion.title">{{ discussion.title }}</h4></a> 
+            <div class="distinct top-topic">
+                <a href="/?topic={{discussion.topic}}">{{discussion.topic}}</a>
+            </div>
+            <hr>
+            <div class="flex">
+                <div>
+                    <small>{{ discussion.Viewss.count|shorten_number }} Views. </small>
+                    <small>{{discussion.Likes.count|shorten_number }} Likes. </small>
+                    <small>{{ discussion.comments_set.count|shorten_number}} Comments. </small>
+                </div>
+                <div class="margin-auto distinct down-topic">
+
+                    <a href="/?topic={{discussion.topic}}">{{discussion.topic}}
+                        
+                    </a>
+    
+                </div>
+    
+            </div>
+        </div>
+    {% endfor %}
+    
+    {% if discussions.has_other_pages %}
+    <ul class="paginations">
+        {% if discussions.has_previous %}
+            <li class="PageItem borders-left "><a class="PageLink" href="?page={{ discussions.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">{% include 'icon/left.svg' %}</a></li>
+        {% else %}
+        <li class="PageItem disabled borders-left"><a class="PageLink">{% include 'icon/left.svg' %}</a></li>
+        {% endif %}
+        {% for page_num in discussions.paginator.page_range %}
+            {% if discussions.number == page_num %}
+                <li class="PageItem active "><a class="PageLink" href="#">{{ page_num }}</a></li>
+                {% elif page_num > discussions.number|add:'-4' and page_num < discussions.number|add:'4' %}
+                <li class="PageItem none-active"><a class="PageLink" href="?page={{ page_num }}{% if q %}&q={{ q }}{% endif %}">{{ page_num }}</a></li>
+                {% endif %}
+                {% endfor %}
+                {% if discussions.paginator.num_pages > 5 %}
+                    {% if discussions.has_next %}
+                        <li class="PageItem disabled"><a class="PageLink">...</a></li>
+                    {% endif %}
+                {% endif %}
+                {% if discussions.has_next %}
+                <li class="PageItem borders-right"><a class="PageLink" href="?page={{ discussions.next_page_number }}{% if q %}&q={{ q }}{% endif %}">{% include 'icon/right.svg' %}</a></li>
+                {% else %}
+                <li class="PageItem disabled borders-right"><a class="PageLink">{% include 'icon/right.svg' %}</a></li>
+        {% endif %}
+    </ul>
+{% endif %}
+

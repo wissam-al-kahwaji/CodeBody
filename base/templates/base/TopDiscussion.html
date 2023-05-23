@@ -1,0 +1,68 @@
+{% load custom_filters %}
+{% if discussion_count == 0 %}
+
+<div class="TopDiscussion">
+    <div class="Top-Title">
+        <h5>Top Three Discussions</h5>
+    </div>
+
+    <div class="TopDiscussion_None border-hr">
+            There are No Discussions    
+    </div>
+</div>
+
+{% else %}
+<div class="TopDiscussion">
+    <div class="Top-Title">
+        <h5>Top Three Discussions</h5>
+    </div>
+    {% for Discussion in TopDiscussion %}
+    <div class="TopDiscussion_Data border-hr effect_text_top animation-1s">
+        <div class="TopDiscussion_User flex">
+            <div class="TopDiscussion_img">
+                <img src="{{ Discussion.name.smallavatar.url }}" alt="">
+            </div>
+            <div>
+                    <a href="profile/{{Discussion.name.username}}">
+                    <small>{{ Discussion.name.name }}</small>
+                </a>
+                <p>
+                    <small>{{ Discussion.name.rank.rank }}</small>
+                </p>
+                </div>
+        </div>
+
+        <div class="TopDiscussion_Title">
+            <a href="discussion/{{Discussion.id}}">
+                <small>
+                    {{ Discussion.title }}
+                </small>
+            </a>
+        </div>
+        <div class="flex">
+            <div class="TopDiscussion_Topic">
+                <a href="/?topic={{ Discussion.topic }}">
+                    <small>
+                        {{ Discussion.topic }}
+                    </small>
+                </a>
+            </div>
+
+            <div class="margin-auto TopDiscussion_Comments">
+                <div class="flex">
+                    <div class="TopDiscussion_icon">
+                        {% include 'icon/comments.svg' %}
+                    </div>
+                    <div>
+                        <small>
+                            {{ Discussion.CountComments|shorten_number }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+        {% endfor %}
+</div>
+{% endif %}

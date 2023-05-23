@@ -1,0 +1,121 @@
+{% load custom_filters %}
+
+<div class="topics border-hr">
+    <h4 class="title">Topic</h4>
+        <div class="spinner-border topics-loader"></div>
+        <ul id="Topic_list">
+
+        </ul>
+    </div>
+
+    <script>
+            let Topic_list = document.querySelector("#Topic_list");
+            let topics_loader = document.querySelector(".topics-loader");
+            let More_Topics = document.querySelector(".More-Topics");
+            let start_topic = 0;
+            let end_topic = 10;
+            let topic_length = 5;
+
+    function shorten_number(number) {
+    var suffixes = ['', 'K', 'M', 'B'];
+    var suffix_index = 0;
+
+    while (number >= 1000 && suffix_index < suffixes.length - 1) {
+        suffix_index++;
+        number /= 1000;
+    }
+
+    var result = suffixes[suffix_index] == '' ? number.toFixed(0) : number.toFixed(1);
+    result += suffixes[suffix_index];
+    
+    return result;
+}
+            
+    function Topics_Lists(start_topic,end_topic){
+            
+        let Topic_HTML = '';
+            topics_loader.style.display="block";
+            Topic_list.style.display="none";
+        
+        $.ajax({
+            url:"/topic/",
+            data:{
+                "start":start_topic,
+                "end":end_topic,
+            },
+            
+            success: function(data){
+                Topic_HTML += `<div class="All-Topic"><a href="{% url 'home' %}"><li>All</li></a></div>`;
+                for(topic of data){
+                    topic.discussions = shorten_number(topic.discussions);
+                    Topic_HTML += `<div id="Topic-list-effect" class="flex animation-1s effect_text_left">
+                        <a href="{% url 'home' %}?topic=${topic.name}"><li>${topic.name}</li></a>
+                        <label class="margin-auto count_topic">${topic.discussions}</label>
+                        </div>`;
+                    }
+                    Topic_HTML += `<div class="More-Topics"> More {% include 'icon/downmore.svg' %} </div>`;
+                    Topic_list.innerHTML = Topic_HTML;
+                    topics_loader.style.display="none";
+                    Topic_list.style.display="block";
+                    setTimeout(() => {
+                        let Topic_list_effect = document.querySelectorAll("#Topic-list-effect");
+                        for (let i = 0; i < Topic_list_effect.length; i++) {
+                            Topic_list_effect[i].classList.remove("effect_text_left");
+                            }
+                    },2000);
+                }});
+            }
+
+    function Topics_AddNew(start_topic,end_topic){
+        let Topic_HTML = '';
+            $.ajax({
+            url:"/topic/",
+            data:{
+                "start":start_topic,
+                "end":end_topic,
+            },
+            success: function(data){
+                if (data.error == 'NotData'){
+                    More_Topics = document.querySelector(".More-Topics");
+                    More_Topics.remove();
+                    Topic_HTML += `<div class="Done-Topics">Done</div>`;
+                    Topic_list.innerHTML += Topic_HTML;
+                    topics_loader.style.display="none";
+                    Topic_list.style.display="block";
+                }else{
+                    for(topic of data){
+                        Topic_HTML += `<div id="Topic-list-effect" class="flex animation-1s effect_text_left">
+                            <a href="{% url 'home' %}?topic=${topic.name}"><li>${topic.name}</li></a>
+                            <label class="margin-auto count_topic">${topic.discussions}</label>
+                            </div>`;
+                        }
+                        More_Topics = document.querySelector(".More-Topics");
+                        More_Topics.remove();
+                        Topic_HTML += `<div class="More-Topics"> More {% include 'icon/downmore.svg' %} </div>`;
+                        Topic_list.innerHTML += Topic_HTML;
+                        topics_loader.style.display="none";
+                        Topic_list.style.display="block";
+                        let notificationsList = document.getElementById("Topic_list");
+                        notificationsList.scrollTop = notificationsList.scrollHeight;
+                        setTimeout(() => {
+                        let Topic_list_effect = document.querySelectorAll("#Topic-list-effect");
+                        for (let i = 0; i < Topic_list_effect.length; i++) {
+                            Topic_list_effect[i].classList.remove("effect_text_left");
+                            }
+                    },1200);
+                    }
+                }});
+            }
+
+    document.addEventListener("click", function(event) {
+    const ClickMore = event.target;
+    if (ClickMore.className === 'More-Topics' ){
+        start_topic = end_topic + 1;
+        end_topic = end_topic + topic_length;
+        Topics_AddNew(start_topic,end_topic);
+    }
+    });
+
+    Topics_Lists(start_topic,end_topic);
+
+</script>
