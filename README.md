@@ -1,12 +1,8 @@
 # Code Body 
+
+**About Code Body**
+
 > This is a Beta version of Code Body, you can take advantage of this version, as stated in the license
-
-
-- Code Body uses real-time data refresh using django-sse, and is heavily Ajax-based, to create a good user experience.
-
-# About Code Body
-
-- This is a Beta version that you can benefit from in your projects.
 
 - On this website, you will find many features that you can try out and explore, such as the Quick Search experience, which can be accessed by using the shortcut `Ctrl + F`.
 
