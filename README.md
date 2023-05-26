@@ -1,6 +1,6 @@
 # Code Body 
 
-> You can see a simple demo of the site *[Video Demo](https://fb.watch/kGeZRzTJCO/)*
+> You can see a simple demo of the site : *[Video Demo](https://fb.watch/kGeZRzTJCO/)*
 
 
 **About Code Body**
